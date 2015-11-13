@@ -709,16 +709,13 @@ fn stdout_isatty() -> bool {
 }
 #[cfg(windows)]
 fn stdout_isatty() -> bool {
-    const STD_OUTPUT_HANDLE: libc::DWORD = -11i32 as libc::DWORD;
-    extern "system" {
-        fn GetStdHandle(which: libc::DWORD) -> libc::HANDLE;
-        fn GetConsoleMode(hConsoleHandle: libc::HANDLE,
-                          lpMode: libc::LPDWORD) -> libc::BOOL;
-    }
+    extern crate winapi;
+    extern crate kernel32;
+    const STD_OUTPUT_HANDLE: winapi::DWORD = -11i32 as winapi::DWORD;
     unsafe {
-        let handle = GetStdHandle(STD_OUTPUT_HANDLE);
+        let handle = kernel32::GetStdHandle(STD_OUTPUT_HANDLE);
         let mut out = 0;
-        GetConsoleMode(handle, &mut out) != 0
+        kernel32::GetConsoleMode(handle, &mut out) != 0
     }
 }
 
@@ -815,9 +812,10 @@ fn get_concurrency() -> usize {
 
     #[cfg(windows)]
     fn num_cpus() -> usize {
+        extern crate kernel32;
         unsafe {
             let mut sysinfo = std::mem::zeroed();
-            libc::GetSystemInfo(&mut sysinfo);
+            kernel32::GetSystemInfo(&mut sysinfo);
             sysinfo.dwNumberOfProcessors as usize
         }
     }
